@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
-    <meta name="theme-color" content="#000000" />
-    <!--
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0, maximum-scale=1.0, shrink-to-fit=no" />
+  <meta name="theme-color" content="#000000" />
+  <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
       Only files inside the `public` folder can be referenced from the HTML.
@@ -22,12 +20,34 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
+
+  <link href="https://fonts.googleapis.com/css?family=Titillium+Web:600,900&text=M0123456789TAJQK" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Noto+Serif+TC&text=♠♥♦♣" rel="stylesheet">
+
+  <title>MauMau</title>
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 970" preserveAspectRatio="xMidYMid meet"
+    style=" position: absolute; left: -9999px; top: -9999px" id="global-svg">
+    <defs>
+      <mask id="card">
+        <rect x="0" y="0" width="100%" height="100%" rx="10" ry="10" fill="white" />
+      </mask>
+      <mask id="bottom-half">
+        <polygon points="0,640 0,970 600,970 600,320" mask="url(#card)" fill="white" />
+      </mask>
+      <mask id="top-half">
+        <rect x="0" y="0" width="100%" height="100%" rx="10" ry="10" fill="white" />
+        <polygon points="0,640 0,970 600,970 600,320" mask="url(#card)" fill="black" />
+      </mask>
+    </defs>
+  </svg>
+
+  <div id="root"></div>
+  <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.
 
@@ -37,5 +57,6 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-  </body>
+</body>
+
 </html>
