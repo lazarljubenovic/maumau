@@ -9,18 +9,24 @@ import { Player } from '../../components/PlayersQueue'
 import * as _ from 'lodash'
 import * as core from '../../core'
 import { TalonCard } from '../../components/Talon'
-import { PickCardEvent } from '../../components/Hand'
+import { PickCardEvent, HandCard } from '../../components/Hand'
 import { px } from '../../helpers'
 
-function random (min: number, max: number) {
+async function sleep (ms: number) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms)
+  })
+}
+
+function random(min: number, max: number) {
   return (Math.random() * (max - min) + min)
 }
 
-function randomAngle () {
+function randomAngle() {
   return random(-180, 180)
 }
 
-function randomOffset (width: number) {
+function randomOffset(width: number) {
   return random(0, width / 33)
 }
 
@@ -29,6 +35,9 @@ interface StateProps {
   screenHeight: number
   talonCenterX: number
   talonCenterY: number
+  deckCenterX: number
+  deckCenterY: number
+  deckAngle: number
   handLeftPad: number
   handRightPad: number
   handBottomPad: number
@@ -48,14 +57,14 @@ interface State {
   players: Player[]
   currentPlayerId: string
   deck: core.Card[]
-  hand: core.Card[]
+  hand: HandCard[]
   talon: TalonCard[]
 }
 
 const HomePage = styled.div`
   width: 100%;
   height: 100%;
-  background-image: radial-gradient( circle farthest-corner at -4% -12.9%,  rgba(74,98,110,1) 0.3%, rgba(30,33,48,1) 90.2% );
+  background-image: radial-gradient(circle farthest-corner at -4% -12.9%,  rgba(74,98,110,1) 0.3%, rgba(30,33,48,1) 90.2%);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -71,10 +80,22 @@ const TalonWrapper = styled.div<StateProps>`
   z-index: 1;
 `
 
-const HandWrapper = styled.div`
+const HandWrapper = styled.div<StateProps>`
   align-self: flex-start;
   width: 100%;
   margin-bottom: 3vw;
+`
+
+const DeckWrapper = styled.div<StateProps>`
+  width: 1px;
+  height: 1px;
+  position: fixed;
+  display: flex;
+  justify-content: center;
+  justify-items: center;
+  left: ${props => px(props.deckCenterX)};
+  top: ${props => px(props.deckCenterY)};
+  transform: rotate(${props => props.deckAngle + 'deg'});
 `
 
 class Home extends React.Component<Props, State> {
@@ -131,7 +152,7 @@ class Home extends React.Component<Props, State> {
   }
 
   @bind
-  private nextPlayerId () {
+  private nextPlayerId() {
     const index = this.state.players.findIndex(({ id }) => id == this.state.currentPlayerId)
     const nextIndex = (index + 1) % this.state.players.length
     const nextPlayer = this.state.players[nextIndex]
@@ -139,12 +160,34 @@ class Home extends React.Component<Props, State> {
   }
 
   @bind
-  private addToHand (count: number = 1) {
-    const drawnCards = this.state.deck.slice(0, count)
-    const restOfDeck = this.state.deck.slice(count)
+  private draw() {
+    const [drawnCard, ...restOfDeck] = this.state.deck
 
-    const hand = [...this.state.hand, ...drawnCards]
+    const tempHandToGetIndex: core.Card[] = [...this.state.hand, drawnCard]
       .sort(core.helpers.sortTwoCards)
+    const index = tempHandToGetIndex.findIndex(handCard => handCard == drawnCard)
+
+    const visibleChunkOfCardWidth = (this.props.screenWidth - this.props.handLeftPad - this.props.handRightPad - this.props.cardWidth) / (this.state.hand.length + 1 - 1)
+    const xAbsolute = this.props.handLeftPad + visibleChunkOfCardWidth * index
+    const yAbsolute = this.props.screenHeight - this.props.handBottomPad - this.props.cardHeight
+
+    const x = this.props.deckCenterX - xAbsolute - this.props.cardWidth
+    const y = this.props.deckCenterY - yAbsolute - this.props.cardHeight
+
+    const drawnHandCard: HandCard = {
+      ...drawnCard,
+      angle: 0,
+      offsetX: 0,
+      offsetY: 0,
+      start: {
+        angle: this.props.deckAngle,
+        width: this.props.cardWidth,
+        x,
+        y,
+      }
+    }
+
+    const hand = [...this.state.hand, drawnHandCard].sort(core.helpers.sortTwoCards)
 
     this.setState({
       deck: restOfDeck,
@@ -152,12 +195,7 @@ class Home extends React.Component<Props, State> {
     })
   }
 
-  @bind
-  private addOneToHand () {
-    this.addToHand(1)
-  }
-
-  @bind throwToTalon ({ index, rect }: PickCardEvent) {
+  @bind throwToTalon({ index, rect }: PickCardEvent) {
     const pickedCard: core.Card = this.state.hand[index]
     if (pickedCard == null) {
       throw new Error(`No card`)
@@ -175,6 +213,7 @@ class Home extends React.Component<Props, State> {
         width: rect.width,
         x: rect.left,
         y: rect.top,
+        angle: 0,
       },
     }]
 
@@ -184,15 +223,18 @@ class Home extends React.Component<Props, State> {
     })
   }
 
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props)
   }
 
-  public componentDidMount (): void {
-    this.addToHand(20)
+  public async componentDidMount() {
+    for (let i = 0; i < 7; i++) {
+      await sleep(350)
+      this.draw()
+    }
   }
 
-  public render () {
+  public render() {
     return (
       <HomePage>
         <cmps.PlayersQueue
@@ -215,7 +257,14 @@ class Home extends React.Component<Props, State> {
           />
         </TalonWrapper>
 
-        <HandWrapper>
+        <DeckWrapper {...this.props} onClick={this.draw}>
+          <cmps.Deck
+            cardHeight={this.props.cardHeight}
+            cardWidth={this.props.cardWidth}
+          />
+        </DeckWrapper>
+
+        <HandWrapper {...this.props}>
           <cmps.Hand
             cards={this.state.hand}
             onPick={(event) => this.throwToTalon(event)}
@@ -237,6 +286,9 @@ const mapStateToProps: MapStateToProps<StateProps, OwnProps, store.State> = (sta
     cardHeight: store.ui.selectors.cardHeight(state.ui),
     talonCenterX: store.ui.selectors.talonCenterX(state.ui),
     talonCenterY: store.ui.selectors.talonCenterY(state.ui),
+    deckCenterX: store.ui.selectors.deckCenterX(state.ui),
+    deckCenterY: store.ui.selectors.deckCenterY(state.ui),
+    deckAngle: store.ui.selectors.deckAngle(state.ui),
     handLeftPad: store.ui.selectors.handLeftPad(state.ui),
     handRightPad: store.ui.selectors.handRightPad(state.ui),
     handBottomPad: store.ui.selectors.handBottomPad(state.ui),

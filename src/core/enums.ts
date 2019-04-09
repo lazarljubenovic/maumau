@@ -3,6 +3,7 @@ export enum Suit {
   Heart = '♥',
   Diamond = '♦',
   Club = '♣',
+  Back = '',
 }
 
 export const SUITS = [
@@ -26,6 +27,7 @@ export enum Number {
   Jack = 'J',
   Queen = 'Q',
   King = 'K',
+  Back = 'M',
 }
 
 export const NUMBERS = [

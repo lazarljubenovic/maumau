@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { Suit } from '../core/enums'
 import { Card as CardInterface } from '../core/interfaces'
 import bind from 'bind-decorator'
-import { px } from '../helpers'
+import { px } from '../helpers';
 
 interface CardSizes {
   cardWidth: number
@@ -11,6 +11,7 @@ interface CardSizes {
 }
 
 interface Props extends CardInterface, CardSizes {
+  withoutSmall?: boolean
   onClick?: (event: React.MouseEvent<SVGSVGElement, MouseEvent>) => void
 }
 
@@ -22,14 +23,15 @@ const COLORS: Record<Suit, [string, string]> = {
   [Suit.Heart]: ['rgba(254,3,104,1)', 'rgba(103,3,255,1)'],
   [Suit.Diamond]: ['rgba(231,69,54,1)', 'rgba(255,181,17,1)'],
   [Suit.Spade]: ['rgba(176,255,39,1)', 'rgba(86,238,225,1)'],
+  [Suit.Back]: ['rgba(255,255,249,1)', 'rgba(160,199,254,1)'],
 }
 
 const Svg = styled.svg<CardSizes>`
   font-family: 'Titillium Web', 'Noto Serif TC', sans-serif;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .1)) drop-shadow(0 2px 1px rgba(0, 0, 0, .1));
   user-select: none;
-  width: ${props => props.cardWidth};
-  height: ${props => props.cardHeight};
+  width: ${props => px(props.cardWidth)};
+  height: ${props => px(props.cardHeight)};
 `
 
 const CenterNumber = styled.g<CardSizes>`
@@ -61,7 +63,7 @@ class Card extends React.Component<Props, State> {
       Card.renderedSuits.push(this.props.suit)
 
       const defs = document.querySelector('#global-svg > defs')!
-      defs.insertAdjacentHTML('afterbegin', `
+      const html = `
         <linearGradient
           id="grad${this.props.suit}"
           gradientTransform="rotate(0)"
@@ -71,7 +73,8 @@ class Card extends React.Component<Props, State> {
           <stop offset="0%" stop-color="${c[0]}" />
           <stop offset="100%" stop-color="${c[1]}" />
         </linearGradient>
-      `)
+      `
+      defs.insertAdjacentHTML('afterbegin', html)
     }
 
     const gradUrl = 'url(#grad' + this.props.suit + ')'
@@ -103,23 +106,29 @@ class Card extends React.Component<Props, State> {
             </text>
           </CenterNumber>
 
-          <Small {...cardSizes}>
-            <text x="6.2%" y="1%" fill="white" textAnchor="middle" dominantBaseline="hanging">
-              {this.props.number}
-            </text>
-            <SmallSuit x="6%" y="15%" fill="white" textAnchor="middle" dominantBaseline="handing" {...cardSizes}>
-              {this.props.suit}
-            </SmallSuit>
-          </Small>
+          {
+            !this.props.withoutSmall &&
+            <Small {...cardSizes}>
+              <text x="6.2%" y="1%" fill="white" textAnchor="middle" dominantBaseline="hanging">
+                {this.props.number}
+              </text>
+              <SmallSuit x="6%" y="15%" fill="white" textAnchor="middle" dominantBaseline="handing" {...cardSizes}>
+                {this.props.suit}
+              </SmallSuit>
+            </Small>
+          }
 
-          <Small transform={'rotate(180 300 485)'} {...cardSizes}>
-            <text x="6.2%" y="1%" fill={c[1]} textAnchor="middle" dominantBaseline="hanging">
-              {this.props.number}
-            </text>
-            <SmallSuit x="6%" y="15%" fill={c[1]} textAnchor="middle" dominantBaseline="handing" {...cardSizes}>
-              {this.props.suit}
-            </SmallSuit>
-          </Small>
+          {
+            !this.props.withoutSmall &&
+            <Small transform={'rotate(180 300 485)'} {...cardSizes}>
+              <text x="6.2%" y="1%" fill={c[1]} textAnchor="middle" dominantBaseline="hanging">
+                {this.props.number}
+              </text>
+              <SmallSuit x="6%" y="15%" fill={c[1]} textAnchor="middle" dominantBaseline="handing" {...cardSizes}>
+                {this.props.suit}
+              </SmallSuit>
+            </Small>
+          }
 
         </Svg>
       </>

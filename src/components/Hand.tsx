@@ -4,8 +4,8 @@ import styled from 'styled-components'
 import Card from './Card'
 import posed, { PoseGroup } from 'react-pose'
 import bind from 'bind-decorator'
-import { px } from '../helpers';
-import { runInThisContext } from 'vm';
+import { px } from '../helpers'
+import { AdditionalCardProps } from './Talon'
 
 export interface PickCardEvent {
   index: number
@@ -22,8 +22,11 @@ interface GeometryProps {
   // handBottomPad: number
 }
 
+export interface HandCard extends core.Card, AdditionalCardProps {
+}
+
 interface Props extends GeometryProps {
-  cards: core.Card[]
+  cards: HandCard[]
   onPick: (pickCardEvent: PickCardEvent) => void
 }
 
@@ -37,13 +40,28 @@ const Wrapper = styled.div<GeometryProps>`
   height: 100%;
 `
 
-const CardLeftLineStyle = styled.div`
+const CardLeftLineStyle = styled.div<AdditionalCardProps & GeometryProps>`
   position: relative;
   width: 1px;
   height: 100%;
 `
 
-const CardLeftLine = posed(CardLeftLineStyle)()
+const CardLeftLine = posed<AdditionalCardProps & GeometryProps>(CardLeftLineStyle)({
+  preEnter: {
+    x: (props: AdditionalCardProps & GeometryProps) => props.start.x,
+    y: (props: AdditionalCardProps & GeometryProps) => props.start.y,
+    rotate: (props: AdditionalCardProps & GeometryProps) => props.start.angle,
+  },
+  enter: {
+    x: (props: AdditionalCardProps & GeometryProps) => props.offsetX,
+    y: (props: AdditionalCardProps & GeometryProps) => props.offsetY,
+    rotate: (props: AdditionalCardProps & GeometryProps) => props.angle,
+    transition: {
+      duration: 250,
+      ease: 'easeIn',
+    },
+  },
+})
 
 const CardWrapperOuter = styled.div`
   position: absolute;
@@ -53,7 +71,9 @@ const CardWrapperOuter = styled.div`
   align-items: center;
 `
 
-const CardWrapperInner = posed.div({
+const CardWrapperInnerStyle = styled.div<AdditionalCardProps & GeometryProps>``
+
+const CardWrapperInner = posed<AdditionalCardProps & GeometryProps>(CardWrapperInnerStyle)({
   hoverable: true,
   pressable: true,
   init: {
@@ -61,11 +81,11 @@ const CardWrapperInner = posed.div({
     scale: 1,
   },
   hover: {
-    y: ({ size }: { size: number }) => -size / 6,
+    y: (props: GeometryProps) => -props.cardHeight / 10,
     scale: 1,
   },
   press: {
-    y: ({ size }: { size: number }) => -size / 6,
+    y: (props: GeometryProps) => -props.cardHeight / 10,
     scale: 0.98,
   },
 })
@@ -77,20 +97,30 @@ class Hand extends React.Component<Props, State> {
   }
 
   public render() {
-    const geometryProps: GeometryProps = { cardWidth: this.props.cardWidth, cardHeight: this.props.cardHeight }
+    const geometryProps: GeometryProps = {
+      cardWidth: this.props.cardWidth,
+      cardHeight: this.props.cardHeight,
+    }
 
     return (
       <Wrapper {...geometryProps}>
-        <PoseGroup>
+        <PoseGroup preEnterPose="preEnter">
           {
             this.props.cards.map((card, index) => {
               const keyElements: any[] = [card.suit, card.number]
               if (card.deckIndex != null) keyElements.push(card.deckIndex)
               const key = keyElements.join('')
               return (
-                <CardLeftLine key={key}>
+                <CardLeftLine
+                  key={key}
+                  {...geometryProps}
+                  {...card}
+                >
                   <CardWrapperOuter>
-                    <CardWrapperInner>
+                    <CardWrapperInner
+                      {...geometryProps}
+                      {...card}
+                    >
                       <Card
                         number={card.number}
                         suit={card.suit}

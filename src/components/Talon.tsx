@@ -5,7 +5,7 @@ import Card from './Card'
 import posed, { PoseGroup } from 'react-pose'
 import bind from 'bind-decorator'
 
-interface AdditionalCardProps {
+export interface AdditionalCardProps {
   offsetX: number
   offsetY: number
   angle: number
@@ -13,6 +13,7 @@ interface AdditionalCardProps {
   start: {
     x: number
     y: number
+    angle: number
     width: number
   }
 }
@@ -61,16 +62,13 @@ const CardDotWrapperStyle = styled.div<AdditionalCardProps & Geometry>`
 
 const CardDotWrapper = posed<AdditionalCardProps & Geometry>(CardDotWrapperStyle)({
   exit: {
-    // opacity: 0,
     x: (props: AdditionalCardProps & Geometry) => props.start.x - props.talonCenterX + props.cardWidth / 2,
     y: (props: AdditionalCardProps & Geometry) => props.start.y - props.talonCenterY + props.cardHeight / 2,
-    rotate: 0,
+    rotate: (props: AdditionalCardProps & Geometry) => props.start.angle,
   },
   enter: {
-    // opacity: 1,
     x: (props: AdditionalCardProps & Geometry) => props.offsetX,
     y: (props: AdditionalCardProps & Geometry) => props.offsetY,
-    scale: 1,
     rotate: (props: AdditionalCardProps & Geometry) => props.angle,
     transition: {
       duration: 333,
